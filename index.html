@@ -504,6 +504,30 @@ function App() {
   const [results,setResults]=useState(null);
   const [animating,setAnimating]=useState(false);
   const [email,setEmail]=useState("");
+  const [submitState,setSubmitState]=useState("idle"); // idle | sending | done | error
+
+  const sendReport=async()=>{
+    if(!email||!email.includes("@")) return;
+    setSubmitState("sending");
+    try {
+      const scriptUrl = "https://script.google.com/macros/s/AKfycbyicUuk_AnufRMbM7k_N1I1tcDwllX1jif8b-JVHlFvfi97t9kAdpkHRUxWcgyNOK6ysg/exec";
+      await fetch(scriptUrl, {
+        method:"POST",
+        mode:"no-cors",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          email,
+          profile: results ? PROFILES[results.primary]?.name : "",
+          severity: results ? results.severity : "",
+          impact: results ? results.impact : "",
+          triggers: results ? results.triggers.join(", ") : "",
+        }),
+      });
+      setSubmitState("done");
+    } catch(err) {
+      setSubmitState("error");
+    }
+  };
 
   const progress=((currentQ+1)/QUESTIONS.length)*100;
   const currentSection=SECTIONS.find(s=>currentQ>=s.range[0]&&currentQ<=s.range[1]);
@@ -629,10 +653,33 @@ function App() {
           <div style={S.leadCapture}>
             <h3 style={S.leadTitle}>Get Your Full Report</h3>
             <p style={S.leadSub}>Receive your detailed Emotional Profile by email — plus early access to our programs.</p>
-            <div style={S.emailRow}>
-              <input type="email" placeholder="Your email address" value={email} onChange={e=>setEmail(e.target.value)} style={S.emailInput}/>
-              <button style={S.emailBtn}>Send Report</button>
-            </div>
+            {submitState==="done" ? (
+              <div style={{padding:"16px",borderRadius:12,background:"rgba(91,168,143,0.15)",border:"1px solid rgba(91,168,143,0.3)",color:"#5BA88F",fontSize:14,fontWeight:500}}>
+                ✓ Done! Check your inbox — your report is on its way.
+              </div>
+            ) : submitState==="error" ? (
+              <div style={{padding:"16px",borderRadius:12,background:"rgba(232,93,58,0.1)",border:"1px solid rgba(232,93,58,0.3)",color:"#E85D3A",fontSize:14}}>
+                Something went wrong. Please try again in a moment.
+                <button style={{...S.ghostBtn,marginTop:8,fontSize:12}} onClick={()=>setSubmitState("idle")}>Try Again</button>
+              </div>
+            ) : (
+              <div style={S.emailRow}>
+                <input
+                  type="email"
+                  placeholder="Your email address"
+                  value={email}
+                  onChange={e=>setEmail(e.target.value)}
+                  style={S.emailInput}
+                />
+                <button
+                  style={{...S.emailBtn, opacity: submitState==="sending"||!email?0.6:1, cursor: submitState==="sending"||!email?"not-allowed":"pointer"}}
+                  onClick={sendReport}
+                  disabled={submitState==="sending"||!email}
+                >
+                  {submitState==="sending"?"Sending...":"Send Report"}
+                </button>
+              </div>
+            )}
           </div>
           <div style={S.disclaimer}>
             <p>This assessment is designed for personal awareness and emotional education. It is not a medical or psychological diagnostic tool. If you are experiencing persistent distress, please reach out to a licensed mental health professional or contact a crisis helpline in your area.</p>
