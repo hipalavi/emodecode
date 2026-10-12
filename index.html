@@ -48,28 +48,22 @@ const PROFILES = {
     practices:["Keep investing in the habits that got you here","Check in with yourself regularly — clarity is something to maintain","Be a steady presence for people in your life who may be struggling","Explore what thriving looks like for you — not just okay"],
   },
   pressure_cooker: {
-    emoji:"🔥", name:"Pressure Cooker",
+    emoji:"⛈️", name:"Storm Brewing",
     summary:"Externalized intensity — anger without a clear outlet",
     description:"Your emotional pattern shows a lot of energy that doesn't have a clear outlet. You may be experiencing frustration, resentment, or a sense of injustice — and it's showing up as irritability, tension, or a short fuse. This isn't just being angry — it's a signal that something in your environment or life situation needs to change, and your emotional system is sounding the alarm.",
     practices:["Boundary-setting exercises","Anger journaling — what's underneath the frustration?","Identifying unmet needs behind the anger","Physical release practices (movement, breathwork)"],
   },
   running_on_empty: {
-    emoji:"🌊", name:"Running on Empty",
+    emoji:"🪫", name:"Low Battery",
     summary:"Quiet depletion — energy and interest gradually dimming",
     description:"Your emotional pattern shows a gradual dimming of energy, interest, and motivation. You may not feel sad in the dramatic way people expect — it might just feel like everything is muted, heavy, or like you're moving through fog. This kind of quiet emotional drain often goes unrecognised because it doesn't match the stereotype of burnout or depression. But the withdrawal, the flatness, the effort it takes to do ordinary things — those are signals worth understanding.",
     practices:["Behavioural activation — small, low-stakes actions to rebuild momentum","Social connection nudges — even brief ones count","Energy tracking throughout the day","Gentle routine restoration"],
   },
   emotional_tug_of_war: {
-    emoji:"🔀", name:"Emotional Tug-of-War",
+    emoji:"🔀", name:"Emotional Tug of War",
     summary:"Swinging between anger and shutdown — and back again",
     description:"Your emotional pattern is showing up as both high activation and low mood — and they may be feeding each other. One day you're irritable and reactive; the next you're flat and withdrawn. This isn't confusion — it's your emotional system toggling between fight mode and shutdown mode, and it's more common than most people realise. The key is learning to read which state you're in and what it needs.",
     practices:["Emotional labelling — name the state before reacting to it","Mood tracking to identify what triggers the swing","Nervous system regulation techniques","Window of tolerance exercises"],
-  },
-  silent_storm: {
-    emoji:"🎭", name:"Silent Storm",
-    summary:"Calm on the surface, a lot going on underneath",
-    description:"On the surface, you're managing. But underneath the 'I'm fine,' there's a different story. Your pattern suggests you've gotten very skilled at keeping what you're really feeling out of sight — which takes enormous energy. The gap between how you present and how you actually feel is worth paying attention to, because maintaining that surface takes a real toll over time.",
-    practices:["Authenticity micro-practices — small moments of honesty with yourself","Safe disclosure — sharing with one trusted person","Noticing the cost: what does staying 'fine' take out of you?","Building trust bridges with select people in your life"],
   },
   wired_and_tired: {
     emoji:"⚡", name:"Wired and Tired",
@@ -82,6 +76,12 @@ const PROFILES = {
     summary:"Your thoughts are amplifying what you're feeling",
     description:"Your emotional experience is being heavily shaped by recurring thought patterns — replaying events, harsh self-talk, or 'what if' predictions. The feelings are real, but they're being amplified by mental habits that have become automatic. The good news: once you can spot the loop, you can start to interrupt it. That's a skill — and it's learnable.",
     practices:["Cognitive restructuring — questioning the thought, not just feeling it","Thought records: write it down to see it clearly","Defusion techniques — creating distance from the thought","Reframing exercises"],
+  },
+  silent_storm: {
+    emoji:"🌫️", name:"Grey Skies",
+    summary:"Calm on the surface, a lot going on underneath",
+    description:"On the surface, you're managing. But underneath the 'I'm fine,' there's a different story. Your pattern suggests you've gotten very skilled at keeping what you're really feeling out of sight — which takes enormous energy. The gap between how you present and how you actually feel is worth paying attention to, because maintaining that surface takes a real toll over time.",
+    practices:["Authenticity micro-practices — small moments of honesty with yourself","Safe disclosure — sharing with one trusted person","Noticing the cost: what does staying 'fine' take out of you?","Building trust bridges with select people in your life"],
   },
 };
 
@@ -499,6 +499,8 @@ const S={
 
 function App() {
   const [phase,setPhase]=useState("welcome");
+  const [agreeData,setAgreeData]=useState(false);
+  const [agreeAge,setAgreeAge]=useState(false);
   const [currentQ,setCurrentQ]=useState(0);
   const [answers,setAnswers]=useState({});
   const [results,setResults]=useState(null);
@@ -587,7 +589,16 @@ function App() {
         <h2 style={S.consentTitle}>Before We Start</h2>
         <p style={S.consentText}>Your responses are confidential and used only to generate your personal Emotional Profile. This is an awareness tool — not a medical or psychological diagnosis.</p>
         <p style={S.consentText}>If you're in crisis or experiencing persistent distress, please reach out to a licensed mental health professional or a crisis helpline in your area.</p>
-        <button style={S.primaryBtn} onClick={()=>setPhase("quiz")}>I Understand — Continue</button>
+        <p style={S.consentText}>In India you can call <strong>Tele-MANAS 14416</strong> (free, 24/7, many languages).</p>
+        <label style={{display:"flex",gap:10,alignItems:"flex-start",textAlign:"left",fontSize:13,color:"rgba(232,228,220,0.75)",margin:"0 0 10px",cursor:"pointer"}}>
+          <input type="checkbox" checked={agreeData} onChange={e=>setAgreeData(e.target.checked)} style={{marginTop:3}}/>
+          <span>I agree that my answers (and email, if I choose to share it) are stored securely and used only to create and send my Emotional Profile. I can ask for my data to be deleted at any time.</span>
+        </label>
+        <label style={{display:"flex",gap:10,alignItems:"flex-start",textAlign:"left",fontSize:13,color:"rgba(232,228,220,0.75)",margin:"0 0 20px",cursor:"pointer"}}>
+          <input type="checkbox" checked={agreeAge} onChange={e=>setAgreeAge(e.target.checked)} style={{marginTop:3}}/>
+          <span>I confirm I am 18 years or older.</span>
+        </label>
+        <button style={{...S.primaryBtn,opacity:(agreeData&&agreeAge)?1:0.4,cursor:(agreeData&&agreeAge)?"pointer":"not-allowed"}} disabled={!(agreeData&&agreeAge)} onClick={()=>setPhase("quiz")}>Continue</button>
         <button style={S.ghostBtn} onClick={()=>setPhase("welcome")}>Go Back</button>
       </div>
     </div>
@@ -616,6 +627,12 @@ function App() {
               </div>
             ))}
           </div>
+          {(results.pct.DW>=60||results.impact==="SEVERE"||results.primary==="silent_storm"||results.primary==="running_on_empty")&&(
+            <div style={{...S.profileCard,border:"1px solid rgba(212,168,67,0.5)",background:"rgba(212,168,67,0.08)"}}>
+              <h3 style={S.profileCardTitle}>💛 You don't have to carry this alone</h3>
+              <p style={S.profileDesc}>Your answers suggest you've been carrying a lot lately. This result is not a diagnosis, but it's a good reason to talk to someone you trust or a counsellor. If things feel heavy, call <strong>Tele-MANAS 14416</strong> or 1800-891-4416 — free, confidential, 24/7, in many Indian languages. If you are in immediate danger, call 112.</p>
+            </div>
+          )}
           <div style={S.profileCard}>
             <h3 style={S.profileCardTitle}>{pri.emoji} Primary: {pri.name}</h3>
             <p style={S.profileDesc}>{pri.description}</p>
